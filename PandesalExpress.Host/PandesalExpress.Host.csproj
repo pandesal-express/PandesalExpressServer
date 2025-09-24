@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <UserSecretsId>afa2ba20-9cbb-45bd-ad6e-e5065cfab92d</UserSecretsId>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="9.0.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.7" />
+        <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.7" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.3" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.7" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.7">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.7">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.12.1" />
+        <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+        <PackageReference Include="NRedisStack" Version="1.0.0" />
+        <PackageReference Include="StackExchange.Redis" Version="2.8.41" />
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.3" />
+        <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\PandesalExpress.Infrastructure\PandesalExpress.Infrastructure.csproj" />
+      <ProjectReference Include="..\PandesalExpress.Auth\PandesalExpress.Auth.csproj" />
+      <ProjectReference Include="..\PandesalExpress.Stores\PandesalExpress.Stores.csproj" />
+      <ProjectReference Include="..\PandesalExpress.Commissary\PandesalExpress.Commissary.csproj" />
+      <ProjectReference Include="..\PandesalExpress.Cashier\PandesalExpress.Cashier.csproj" />
+      <ProjectReference Include="..\PandesalExpress.Management\PandesalExpress.Management.csproj" />
+      <ProjectReference Include="..\PandesalExpress.Products\PandesalExpress.Products.csproj" />
+      <ProjectReference Include="..\PandesalExpress.PDND\PandesalExpress.PDND.csproj" />
+      <ProjectReference Include="..\PandesalExpress.Transfers\PandesalExpress.Transfers.csproj" />
+    </ItemGroup>
+
+</Project>

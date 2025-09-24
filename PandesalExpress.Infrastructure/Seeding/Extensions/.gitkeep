@@ -1,0 +1,6 @@
+# Extensions Directory
+
+Contains extension methods and configuration classes for database seeding.
+
+Example:
+- DatabaseSeedingExtensions.cs - Extension methods for IServiceCollection and IApplicationBuilder

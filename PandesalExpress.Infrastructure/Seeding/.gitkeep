@@ -1,0 +1,8 @@
+# Seeding Directory
+
+This directory contains database seeding classes and data files for initializing the database with sample or default data.
+
+## Structure:
+- `Seeders/` - Contains seeding classes for different entities
+- `Data/` - Contains static data files (JSON, CSV, etc.) for seeding
+- `Extensions/` - Contains extension methods for seeding configuration

@@ -1,0 +1,84 @@
+[
+  {
+    "category": "Flavored Pandesal",
+    "products": [
+      "Ube Pandesal",
+      "Cheese Pandesal",
+      "Pandan Pandesal",
+      "Choco Pandesal",
+      "Strawberry Pandesal",
+      "Matcha Pandesal",
+      "Cinnamon Pandesal",
+      "Coffee Pandesal",
+      "Banana Pandesal"
+    ]
+  },
+  {
+    "category": "Premium Filled Pandesal",
+    "products": [
+      "Ube-Cheese Filled Pandesal",
+      "Cheese-Cheese Filled Pandesal (Double Cheese)",
+      "Pandan-Cheese Filled Pandesal",
+      "Coffee-Cheese Filled Pandesal",
+      "Choco-Choco Filled Pandesal",
+      "Strawberry-Choco Filled Pandesal",
+      "Coffee-Choco Filled Pandesal",
+      "Matcha-Choco Filled Pandesal",
+      "Cinna-Choco Filled Pandesal",
+      "Ube-Ube Filled Pandesal (Ultimate Ube)",
+      "Cheese-Ube Filled Pandesal",
+      "Pandan-Ube Filled Pandesal",
+      "Pandan-Pandan Filled Pandesal",
+      "Banana-Choco Filled Pandesal",
+      "Chicken Adobo Pandesal",
+      "Pan de Coco (Coconut Filled)",
+      "Salted Egg Pandesal"
+    ]
+  },
+  {
+    "category": "Ultimate/Specialty Pandesal",
+    "products": [
+      "Double Cheese Ube Filled Pandesal",
+      "Ube Ube-Cheese Combo Pandesal",
+      "Ultimate Ube Ube Pandesal",
+      "Double Ube Cheese Combo Pandesal"
+    ]
+  },
+  {
+    "category": "Other Breads & Rolls",
+    "products": [
+      "Spanish Bread",
+      "Pan de Leche",
+      "Hawaiian Sweet Rolls",
+      "Milk Raisin Sweet Roll",
+      "Ensaymada (Plain)",
+      "Ensaymada (Monggo)",
+      "Ensaymada (Cheese)",
+      "Monay Bread",
+      "King Roll",
+      "Ube Bread (Loaf/Roll)",
+      "Cheese Roll Bread",
+      "Buko Bread",
+      "Chocolate Chip Brioche Rolls",
+      "Cardamom Raisin Sweet Rolls",
+      "Julekake Fruit Sweet Rolls",
+      "Hot Cross Rolls",
+      "Mexican Crackle Top Bread"
+    ]
+  },
+  {
+    "category": "Pastries & Other Items",
+    "products": [
+      "Bizkotso (Biscocho)",
+      "Toasted Siopao",
+      "Leche Flan",
+      "Cassava Cake",
+      "Goldi Hopia Pork",
+      "Polvoron",
+      "Bibingka",
+      "Buchi",
+      "Italian Bomboloni",
+      "Biko"
+    ]
+  }
+]

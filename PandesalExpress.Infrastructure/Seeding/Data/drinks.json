@@ -1,0 +1,22 @@
+[
+  {
+    "name": "Coke",
+    "price": 20.00
+  },
+  {
+    "name": "Sprite",
+    "price": 20.00
+  },
+  {
+    "name": "Pepsi",
+    "price": 20.00
+  },
+  {
+    "name": "Water Bottle",
+    "price": 15.00
+  },
+  {
+    "name": "Iced Tea",
+    "price": 25.00
+  }
+]

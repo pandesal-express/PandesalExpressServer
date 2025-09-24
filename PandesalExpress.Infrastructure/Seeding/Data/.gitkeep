@@ -1,0 +1,8 @@
+# Data Directory
+
+Contains static data files for seeding the database.
+
+Supported formats:
+- JSON files for complex data structures
+- CSV files for simple tabular data
+- SQL files for raw SQL seeding scripts
