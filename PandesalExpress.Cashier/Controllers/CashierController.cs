@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using PandesalExpress.Cashier.Exceptions;
 using PandesalExpress.Cashier.Features.LogSales;
 using PandesalExpress.Infrastructure.Abstractions;

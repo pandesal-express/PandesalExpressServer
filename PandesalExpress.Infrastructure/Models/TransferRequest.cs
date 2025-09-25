@@ -15,7 +15,7 @@ public enum TransferStatus
 }
 
 [Table("transfer_requests")]
-public class TransferRequest : Model
+public sealed class TransferRequest : Model
 {
     [Required]
     [Column("sending_store_id")]
@@ -40,20 +40,20 @@ public class TransferRequest : Model
 
     [Column("response_notes")] public string? ResponseNotes { get; set; } // Notes from the responding cashier (e.g., reason for rejection)
 
-    [Column("system_message")] public string SystemMessage { get; set; }
+    [Column("system_message")] public string? SystemMessage { get; set; }
 
     [Column("shipped_at")] public DateTime? ShippedAt { get; set; } // Timestamp when items were picked up
 
     [Column("received_at")] public DateTime? ReceivedAt { get; set; } // Timestamp when items were received
 
     // Navigation Properties
-    [ForeignKey("SendingStoreId")] public virtual Store? SendingStore { get; set; }
+    [ForeignKey("SendingStoreId")] public Store? SendingStore { get; set; }
 
-    [ForeignKey("ReceivingStoreId")] public virtual Store? ReceivingStore { get; set; }
+    [ForeignKey("ReceivingStoreId")] public Store? ReceivingStore { get; set; }
 
-    [ForeignKey("InitiatingEmployeeId")] public virtual Employee? InitiatingEmployee { get; set; }
+    [ForeignKey("InitiatingEmployeeId")] public Employee? InitiatingEmployee { get; set; }
 
-    [ForeignKey("RespondingEmployeeId")] public virtual Employee? RespondingEmployee { get; set; }
+    [ForeignKey("RespondingEmployeeId")] public Employee? RespondingEmployee { get; set; }
 
-    public virtual ICollection<TransferRequestItem> Items { get; set; } = [];
+    public ICollection<TransferRequestItem> Items { get; set; } = [];
 }

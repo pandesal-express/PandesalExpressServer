@@ -5,7 +5,7 @@ namespace PandesalExpress.Infrastructure.Models;
 
 
 [Table("transfer_request_items")]
-public class TransferRequestItem : Model
+public sealed class TransferRequestItem : Model
 {
 	[Required]
 	[Column("transfer_request_id")]
@@ -24,7 +24,7 @@ public class TransferRequestItem : Model
 	public int QuantityRequested { get; set; }
 
 	[ForeignKey("TransferRequestId")]
-	public virtual TransferRequest? TransferRequest { get; set; }
+	public TransferRequest? TransferRequest { get; set; }
 	[ForeignKey("ProductId")]
-	public virtual Product? Product { get; set; }
+	public Product? Product { get; set; }
 }
