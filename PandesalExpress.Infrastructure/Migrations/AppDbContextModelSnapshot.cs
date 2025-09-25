@@ -853,6 +853,132 @@ namespace PandesalExpress.Infrastructure.Migrations
                     b.ToTable("store_inventories");
                 });
 
+            modelBuilder.Entity("PandesalExpress.Infrastructure.Models.TransferRequest", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("char(26)")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("InitiatingEmployeeId")
+                        .IsRequired()
+                        .HasColumnType("char(26)")
+                        .HasColumnName("initiating_employee_id");
+
+                    b.Property<DateTime?>("ReceivedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("received_at");
+
+                    b.Property<string>("ReceivingStoreId")
+                        .IsRequired()
+                        .HasColumnType("char(26)")
+                        .HasColumnName("receiving_store_id");
+
+                    b.Property<string>("RequestNotes")
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("request_notes");
+
+                    b.Property<string>("RespondingEmployeeId")
+                        .HasColumnType("char(26)")
+                        .HasColumnName("responding_employee_id");
+
+                    b.Property<string>("ResponseNotes")
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("response_notes");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("SendingStoreId")
+                        .IsRequired()
+                        .HasColumnType("char(26)")
+                        .HasColumnName("sending_store_id");
+
+                    b.Property<DateTime?>("ShippedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("shipped_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("varchar(15)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("SystemMessage")
+                        .HasColumnType("text")
+                        .HasColumnName("system_message");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InitiatingEmployeeId");
+
+                    b.HasIndex("ReceivingStoreId");
+
+                    b.HasIndex("RespondingEmployeeId");
+
+                    b.HasIndex("SendingStoreId");
+
+                    b.ToTable("transfer_requests");
+                });
+
+            modelBuilder.Entity("PandesalExpress.Infrastructure.Models.TransferRequestItem", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("char(26)")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("ProductId")
+                        .IsRequired()
+                        .HasColumnType("char(26)")
+                        .HasColumnName("product_id");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasMaxLength(180)
+                        .HasColumnType("character varying(180)")
+                        .HasColumnName("product_name");
+
+                    b.Property<int>("QuantityRequested")
+                        .HasColumnType("int")
+                        .HasColumnName("quantity_requested");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("TransferRequestId")
+                        .IsRequired()
+                        .HasColumnType("char(26)")
+                        .HasColumnName("transfer_request_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("TransferRequestId");
+
+                    b.ToTable("transfer_request_items");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Ulid>", b =>
                 {
                     b.HasOne("PandesalExpress.Infrastructure.Models.AppRole", null)
@@ -1057,6 +1183,59 @@ namespace PandesalExpress.Infrastructure.Migrations
                     b.Navigation("Store");
                 });
 
+            modelBuilder.Entity("PandesalExpress.Infrastructure.Models.TransferRequest", b =>
+                {
+                    b.HasOne("PandesalExpress.Infrastructure.Models.Employee", "InitiatingEmployee")
+                        .WithMany()
+                        .HasForeignKey("InitiatingEmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PandesalExpress.Infrastructure.Models.Store", "ReceivingStore")
+                        .WithMany()
+                        .HasForeignKey("ReceivingStoreId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PandesalExpress.Infrastructure.Models.Employee", "RespondingEmployee")
+                        .WithMany()
+                        .HasForeignKey("RespondingEmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("PandesalExpress.Infrastructure.Models.Store", "SendingStore")
+                        .WithMany()
+                        .HasForeignKey("SendingStoreId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("InitiatingEmployee");
+
+                    b.Navigation("ReceivingStore");
+
+                    b.Navigation("RespondingEmployee");
+
+                    b.Navigation("SendingStore");
+                });
+
+            modelBuilder.Entity("PandesalExpress.Infrastructure.Models.TransferRequestItem", b =>
+                {
+                    b.HasOne("PandesalExpress.Infrastructure.Models.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PandesalExpress.Infrastructure.Models.TransferRequest", "TransferRequest")
+                        .WithMany("Items")
+                        .HasForeignKey("TransferRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("TransferRequest");
+                });
+
             modelBuilder.Entity("PandesalExpress.Infrastructure.Models.Department", b =>
                 {
                     b.Navigation("Employees");
@@ -1101,6 +1280,11 @@ namespace PandesalExpress.Infrastructure.Migrations
                     b.Navigation("SalesLogs");
 
                     b.Navigation("StoreInventories");
+                });
+
+            modelBuilder.Entity("PandesalExpress.Infrastructure.Models.TransferRequest", b =>
+                {
+                    b.Navigation("Items");
                 });
 #pragma warning restore 612, 618
         }
