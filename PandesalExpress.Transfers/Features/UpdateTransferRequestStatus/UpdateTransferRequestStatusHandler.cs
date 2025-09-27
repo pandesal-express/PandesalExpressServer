@@ -109,6 +109,7 @@ public class UpdateTransferRequestStatusHandler(
 
                 await context.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
+                await cacheService.RemoveAsync(cacheKey);
 
                 transferRequestDto.Items =
                 [
