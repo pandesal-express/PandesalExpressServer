@@ -15,7 +15,6 @@ public static class TransfersModuleServiceExtensions
     {
         // Register services
         services.AddScoped<ITransferStatusValidator, TransferStatusValidator>();
-        services.AddScoped<IInventoryAdjustmentService, InventoryAdjustmentService>();
 
         // command handlers
         services.AddScoped<
