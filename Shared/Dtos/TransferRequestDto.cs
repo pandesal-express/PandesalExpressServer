@@ -3,16 +3,17 @@ namespace Shared.Dtos;
 public class TransferRequestDto
 {
     public required string Id { get; init; }
-    public required string SendingStoreId { get; init; }
-    public required string ReceivingStoreId { get; init; }
+    public string? SendingStoreId { get; init; }
+    public string? ReceivingStoreId { get; init; }
     public string? InitiatingEmployeeId { get; init; }
     public string? RespondingEmployeeId { get; init; }
-    public required string Status { get; init; }
-    public string? RequestNotes { get; init; }
-    public string? ResponseNotes { get; init; }
-    public DateTime? ShippedAt { get; init; }
-    public DateTime? ReceivedAt { get; init; }
-    public List<TransferRequestItemDto> Items { get; init; } = [];
+    public required string Status { get; set; }
+    public string? RequestNotes { get; set; }
+    public string? ResponseNotes { get; set; }
+    public string? SystemMessage { get; set; }
+    public DateTime? ShippedAt { get; set; }
+    public DateTime? ReceivedAt { get; set; }
+    public List<TransferRequestItemDto> Items { get; set; } = [];
 }
 
 public class TransferRequestItemDto
