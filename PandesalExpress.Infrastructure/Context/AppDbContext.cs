@@ -113,6 +113,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                .OnDelete(DeleteBehavior.Cascade)
                .IsRequired();
 
+        // StoreInventory index for store and product
+        builder.Entity<StoreInventory>()
+               .HasIndex(si => new { si.StoreId, si.ProductId })
+               .HasDatabaseName("IX_store_inventories_store_id_product_id");
+
         // PdndRequest
         builder.Entity<PdndRequest>()
                .HasOne(e => e.Store)
@@ -236,7 +241,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
         builder.Entity<TransferRequestItem>().HasKey(e => e.Id);
 
         // Department config
-        builder.Entity<Department>(entity =>
+		builder.Entity<Department>(entity =>
             {
                 entity.Property(e => e.Id)
                       .HasColumnType(ID_COLUMN_TYPE)
