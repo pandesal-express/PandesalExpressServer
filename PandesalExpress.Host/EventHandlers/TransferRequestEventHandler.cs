@@ -1,4 +1,3 @@
-using PandesalExpress.Infrastructure.Abstractions;
 using PandesalExpress.Infrastructure.Services;
 using Shared.Events;
 
@@ -11,13 +10,14 @@ public class TransferRequestEventHandler(
 {
     public async Task HandleAsync(TransferRequestCreatedEvent integrationEvent, CancellationToken cancellationToken)
     {
-        logger.LogInformation("Handling TransferRequestCreatedEvent for transfer request {TransferId}", 
-            integrationEvent.TransferRequest.Id);
+        logger.LogInformation(
+            "Handling TransferRequestCreatedEvent for transfer request {TransferId}",
+            integrationEvent.TransferRequest.Id
+        );
 
-        // Create notification for the receiving store
-        var receivingStoreId = integrationEvent.TransferRequest.ReceivingStoreId;
-        var sendingStoreId = integrationEvent.TransferRequest.SendingStoreId;
-        
+        string? receivingStoreId = integrationEvent.TransferRequest.ReceivingStoreId;
+        string? sendingStoreId = integrationEvent.TransferRequest.SendingStoreId;
+
         var notification = new NotificationDto(
             Guid.NewGuid(),
             $"New transfer request received from store {sendingStoreId}",
@@ -30,21 +30,25 @@ public class TransferRequestEventHandler(
 
         // Send notification to the receiving store group
         await notificationService.SendNotificationToGroupAsync(
-            $"Store_{receivingStoreId}", 
+            $"Store_{receivingStoreId}",
             "NewTransferRequest",
             notification
         );
+
+        // TODO: Send a real-time data to both receiving and sending stores for creating a request transfer
     }
 
     public async Task HandleAsync(TransferRequestStatusUpdatedEvent integrationEvent, CancellationToken cancellationToken)
     {
-        logger.LogInformation("Handling TransferRequestStatusUpdatedEvent for transfer request {TransferId} with status {Status}", 
-            integrationEvent.TransferRequest.Id, integrationEvent.TransferRequest.Status);
+        logger.LogInformation(
+            "Handling TransferRequestStatusUpdatedEvent for transfer request {TransferId} with status {Status}",
+            integrationEvent.TransferRequest.Id,
+            integrationEvent.TransferRequest.Status
+        );
 
-        var receivingStoreId = integrationEvent.TransferRequest.ReceivingStoreId;
-        var sendingStoreId = integrationEvent.TransferRequest.SendingStoreId;
-        
-        // Create notification with appropriate message based on status
+        string? receivingStoreId = integrationEvent.TransferRequest.ReceivingStoreId;
+        string? sendingStoreId = integrationEvent.TransferRequest.SendingStoreId;
+
         string message = integrationEvent.TransferRequest.Status switch
         {
             "Accepted" => "Transfer request has been accepted",
@@ -52,7 +56,7 @@ public class TransferRequestEventHandler(
             "Shipped" => "Transfer items have been shipped",
             "Received" => "Transfer items have been received",
             "Cancelled" => "Transfer request has been cancelled",
-            _ => $"Transfer request status updated to {integrationEvent.TransferRequest.Status}"
+            var _ => $"Transfer request status updated to {integrationEvent.TransferRequest.Status}"
         };
 
         var notification = new NotificationDto(
@@ -66,20 +70,21 @@ public class TransferRequestEventHandler(
         );
 
         // Determine which store to notify based on the status
-        string targetStoreId = integrationEvent.TransferRequest.Status switch
+        string? targetStoreId = integrationEvent.TransferRequest.Status switch
         {
-            "Accepted" or "Rejected" => sendingStoreId, // Notify sending store when receiving store responds
-            "Shipped" => receivingStoreId, // Notify receiving store when items are shipped
-            "Received" => sendingStoreId, // Notify sending store when items are received
+            "Accepted" or "Rejected" => sendingStoreId,
+            "Shipped" => receivingStoreId,
+            "Received" => sendingStoreId,
             "Cancelled" => integrationEvent.TransferRequest.Status == "Requested" ? receivingStoreId : sendingStoreId,
-            _ => receivingStoreId // Default to receiving store
+            var _ => receivingStoreId
         };
 
-        // Send notification to the appropriate store group
         await notificationService.SendNotificationToGroupAsync(
-            $"Store_{targetStoreId}", 
+            $"Store_{targetStoreId}",
             "TransferStatusUpdated",
             notification
         );
+
+        // TODO: Send data to both receiving and sending stores for transfer updates
     }
 }
