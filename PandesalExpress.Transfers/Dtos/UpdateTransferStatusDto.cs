@@ -6,4 +6,5 @@ public class UpdateTransferStatusDto
 {
     public TransferStatus Status { get; set; }
     public string? ResponseNotes { get; set; }
+    public string? RequestNotes { get; set; }
 }
