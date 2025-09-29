@@ -26,7 +26,7 @@ services.
 ## 🛠️ Technology Stack
 
 - **.NET 9.0** - Primary framework
-- **ASP.NET Core** - Web API with MVC controllers
+- **ASP.NET Core** - Web API
 - **Entity Framework Core** - ORM with PostgreSQL provider
 - **PostgreSQL** - Primary database
 - **Redis** - Caching and session storage
@@ -41,7 +41,7 @@ services.
 
 - .NET 9.0 SDK
 - PostgreSQL 12+
-- Redis (optional, for caching)
+- Redis (for caching)
 
 ### Setup
 
@@ -107,9 +107,9 @@ PandesalExpress.{Module}/
 
 ## 🏛️ Key Design Patterns
 
-### Custom CQRS Implementation
+### Custom CQRS and Mediator Implementation
 
-- **No MediatR dependency** - Uses custom lightweight CQRS abstractions
+- **No MediatR dependency** - Uses custom lightweight CQRS and Mediator abstractions
 - **Command/Query Handlers** - Located in `Features/` directory
 - **Interfaces** - `ICommandHandler<TCommand, TResponse>` and `IQueryHandler<TQuery, TResponse>`
 
@@ -146,25 +146,6 @@ Each module registers services via extension methods:
 ```csharp
 public static IServiceCollection Add{Module}Module(this IServiceCollection services)
 ```
-
-## 📊 Database Schema
-
-### Core Entities
-
-- **Stores** - Physical store locations with operating hours
-- **Employees** - Staff members with department assignments
-- **Products** - Bakery items with pricing and inventory
-- **Sales Logs** - Transaction records with line items
-- **PDND Requests** - Pick-up and delivery orders
-- **Transfer Requests** - Inter-store inventory transfers
-
-### Key Features
-
-- **Multi-store support** - Centralized management of multiple locations
-- **Inventory tracking** - Real-time stock levels per store
-- **Employee management** - Attendance, payroll, and role-based access
-- **Sales reporting** - Comprehensive transaction logging
-- **Transfer system** - Inter-store inventory movement
 
 ## 🧪 Testing
 
