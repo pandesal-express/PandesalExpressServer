@@ -6,7 +6,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using PandesalExpress.Auth.Attributes;
 using PandesalExpress.Auth.Dtos;
+using PandesalExpress.Auth.Features.FaceLogin;
+using PandesalExpress.Auth.Features.FaceRegister;
 using PandesalExpress.Auth.Features.Login;
 using PandesalExpress.Auth.Features.RefreshToken;
 using PandesalExpress.Auth.Features.Register;
@@ -18,11 +21,7 @@ namespace PandesalExpress.Auth.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuthController(
-    UserManager<Employee> userManager,
-    SignInManager<Employee> signInManager,
-    ILogger<AuthController> logger
-) : ControllerBase
+public class AuthController(ILogger<AuthController> logger) : ControllerBase
 {
     private void _appendCookieDelegate(string key, string value, CookieOptions options) => Response.Cookies.Append(key, value, options);
 
@@ -122,7 +121,7 @@ public class AuthController(
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(EmployeeDto))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<EmployeeDto>> GetUser()
+    public async Task<ActionResult<EmployeeDto>> GetUser([FromServices] UserManager<Employee> userManager)
     {
         string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId) || !Ulid.TryParse(userId, out Ulid userUlid)) return Unauthorized();
@@ -156,7 +155,7 @@ public class AuthController(
     [Authorize]
     [HttpPost("logout")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<ActionResult> Logout()
+    public async Task<ActionResult> Logout([FromServices] SignInManager<Employee> signInManager)
     {
         Response.Cookies.Delete(
             "jwt_token",
@@ -181,5 +180,54 @@ public class AuthController(
         await signInManager.SignOutAsync();
 
         return Ok(new { message = "Logged out successfully." });
+    }
+
+    [AllowAnonymous]
+    [RequireApiKey] // TODO: for simulating in passing api key from server-to-server, will remove in prod
+    [HttpPost("face-login")]
+    [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> FaceLogin([FromBody] string userId, [FromServices] IMediator mediator)
+    {
+        try
+        {
+            var command = new FaceLoginCommand(Ulid.Parse(userId));
+
+            AuthResponseDto result = await mediator.Send(command, HttpContext.RequestAborted);
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException) { return Unauthorized(); }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "An unexpected error occurred during authentication");
+            return StatusCode(500, new { message = "An internal server error occurred." });
+        }
+    }
+
+    [AllowAnonymous]
+    [RequireApiKey] // TODO: for simulating in passing api key from server-to-server, will remove in prod
+    [HttpPost("face-register")]
+    [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> FaceRegister(
+        [FromBody] RegisterRequestDto registerDto,
+        [FromServices] IMediator mediator
+    )
+    {
+        try
+        {
+            var command = new FaceRegisterCommand(registerDto);
+            AuthResponseDto result = await mediator.Send(command, HttpContext.RequestAborted);
+
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException) { return Unauthorized(); }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "An unexpected error occurred during registration");
+            return StatusCode(500, new { message = "An internal server error occurred." });
+        }
     }
 }
