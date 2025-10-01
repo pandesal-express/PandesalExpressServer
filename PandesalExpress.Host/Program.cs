@@ -14,6 +14,7 @@ using PandesalExpress.Host.EventHandlers;
 using PandesalExpress.Host.Hubs;
 using PandesalExpress.Host.Services;
 using PandesalExpress.Infrastructure;
+using PandesalExpress.Infrastructure.Configs;
 using PandesalExpress.Infrastructure.Context;
 using PandesalExpress.Infrastructure.Models;
 using PandesalExpress.Infrastructure.Seeding.Extensions;
@@ -26,7 +27,7 @@ using PandesalExpress.Stores;
 using PandesalExpress.Transfers;
 using Shared.Events;
 using StackExchange.Redis;
-using AssemblyReference = PandesalExpress.Stores.AssemblyReference;
+using AssemblyReference = PandesalExpress.Stores.AssemblyReference; // I let the ide do this but I hate it
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -182,6 +183,9 @@ builder.Services.AddMediator();
 builder.Services.AddScoped<IEventHandler<PdndRequestEvent>, PdndRequestEventHandler>();
 builder.Services.AddScoped<IEventHandler<TransferRequestCreatedEvent>, TransferRequestEventHandler>();
 builder.Services.AddScoped<IEventHandler<TransferRequestStatusUpdatedEvent>, TransferRequestEventHandler>();
+
+// Configurations
+builder.Services.Configure<KeysOptions>(builder.Configuration.GetSection("Keys")); // TODO: This is temporary in simulating server-to-server communication
 
 // Controllers from all assemblies
 builder.Services.AddControllers()
