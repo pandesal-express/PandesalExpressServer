@@ -20,8 +20,8 @@ public record RegisterRequestDto
     [Required] public required string Position { get; init; }
     [Required] public required string DepartmentId { get; init; }
 
-    [Required] [MinLength(8)] public required string Password { get; init; }
-    [Required] [Compare(nameof(Password))] public required string ConfirmPassword { get; init; }
+    [MinLength(8)] public string? Password { get; init; }
+    [Compare(nameof(Password))] public string? ConfirmPassword { get; init; }
 
     public string? StoreId { get; init; }
 }
@@ -29,7 +29,9 @@ public record RegisterRequestDto
 public record AuthResponseDto
 {
     public required string Token { get; init; }
+    public string? RefreshToken { get; init; }
     public DateTime Expiration { get; init; }
+    public string? RefreshTokenExpiration { get; init; }
 
     public required EmployeeDto User { get; init; }
 }
