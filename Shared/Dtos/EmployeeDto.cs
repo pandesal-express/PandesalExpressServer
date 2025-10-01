@@ -9,10 +9,6 @@ public class EmployeeDto
     public required string LastName { get; set; }
     public string? Email { get; set; }
     public string? Position { get; set; }
-    public string? SssNumber { get; set; }
-    public string? TinNumber { get; set; }
-    public string? PhilHealthNumber { get; set; }
-    public string? PagIbigNumber { get; set; }
 
     public DepartmentDto? Department { get; set; }
     public StoreDto? Store { get; set; }

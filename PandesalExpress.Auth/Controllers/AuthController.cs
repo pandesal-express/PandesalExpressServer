@@ -143,10 +143,6 @@ public class AuthController(
                 FirstName = employee.FirstName,
                 LastName = employee.LastName,
                 Position = employee.Position,
-                SssNumber = employee.SssNumber,
-                TinNumber = employee.TinNumber,
-                PhilHealthNumber = employee.PhilHealthNumber,
-                PagIbigNumber = employee.PagIbigNumber,
                 StoreId = employee.StoreId?.ToString(),
                 Department = new DepartmentDto
                 {

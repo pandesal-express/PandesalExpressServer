@@ -16,7 +16,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<Employee> Employees { get; set; }
     public DbSet<Department> Departments { get; set; }
     public DbSet<Attendance> Attendances { get; set; }
-    public DbSet<Payroll> Payrolls { get; set; }
     public DbSet<Store> Stores { get; set; }
     public DbSet<Product> Products { get; set; }
     public DbSet<SalesLog> SalesLogs { get; set; }
@@ -47,14 +46,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                .WithOne(e => e.Department)
                .HasForeignKey(e => e.DepartmentId)
                .OnDelete(DeleteBehavior.Cascade);
-
-        // Payrolls -> Employee
-        builder.Entity<Payroll>()
-               .HasOne(e => e.Employee)
-               .WithMany(e => e.Payrolls)
-               .HasForeignKey(e => e.EmployeeId)
-               .OnDelete(DeleteBehavior.Cascade)
-               .IsRequired();
 
         // Employees -> Store (optional)
         builder.Entity<Employee>()
@@ -115,7 +106,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
 
         // StoreInventory index for store and product
         builder.Entity<StoreInventory>()
-               .HasIndex(si => new { si.StoreId, si.ProductId })
+               .HasIndex(si => new
+                   {
+                       si.StoreId,
+                       si.ProductId
+                   }
+               )
                .HasDatabaseName("IX_store_inventories_store_id_product_id");
 
         // PdndRequest
@@ -216,10 +212,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 entity.Property(e => e.FirstName).HasColumnType("varchar(70)");
                 entity.Property(e => e.LastName).HasColumnType("varchar(70)");
                 entity.Property(e => e.Position).HasColumnType("varchar(180)");
-                entity.Property(e => e.SssNumber).HasColumnType("varchar(10)").IsRequired(false);
-                entity.Property(e => e.TinNumber).HasColumnType("varchar(12)").IsRequired(false);
-                entity.Property(e => e.PhilHealthNumber).HasColumnType("varchar(12)").IsRequired(false);
-                entity.Property(e => e.PagIbigNumber).HasColumnType("varchar(12)").IsRequired(false);
             }
         );
 
@@ -229,7 +221,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
         // -- PK --
         builder.Entity<Department>().HasKey(e => e.Id);
         builder.Entity<Attendance>().HasKey(e => e.Id);
-        builder.Entity<Payroll>().HasKey(e => e.Id);
         builder.Entity<Store>().HasKey(e => e.Id);
         builder.Entity<Product>().HasKey(e => e.Id);
         builder.Entity<SalesLog>().HasKey(e => e.Id);
@@ -241,7 +232,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
         builder.Entity<TransferRequestItem>().HasKey(e => e.Id);
 
         // Department config
-		builder.Entity<Department>(entity =>
+        builder.Entity<Department>(entity =>
             {
                 entity.Property(e => e.Id)
                       .HasColumnType(ID_COLUMN_TYPE)
@@ -260,25 +251,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 entity.Property(e => e.Status)
                       .HasColumnType("varchar(10)")
                       .HasConversion<string>();
-            }
-        );
-
-        // Payroll config
-        builder.Entity<Payroll>(entity =>
-            {
-                entity.Property(e => e.Id)
-                      .HasColumnType(ID_COLUMN_TYPE)
-                      .ValueGeneratedNever();
-                entity.Property(e => e.EmployeeId).HasColumnType(ID_COLUMN_TYPE);
-                entity.Property(e => e.BaseSalary).HasColumnType("decimal(18, 2)");
-                entity.Property(e => e.Tax).HasColumnType("decimal(10, 2)");
-                entity.Property(e => e.SssDeduction).HasColumnType("decimal(10, 2)");
-                entity.Property(e => e.PhilHealthDeduction).HasColumnType("decimal(10, 2)");
-                entity.Property(e => e.PagIbigDeduction).HasColumnType("decimal(10, 2)");
-                entity.Property(e => e.LoanDeduction).HasColumnType("decimal(10, 2)");
-                entity.Property(e => e.Overtime).HasColumnType("decimal(10, 2)");
-                entity.Property(e => e.Bonus).HasColumnType("decimal(10, 2)");
-                entity.Property(e => e.TotalSalary).HasColumnType("decimal(18, 2)");
             }
         );
 

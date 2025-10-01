@@ -8,10 +8,6 @@ namespace PandesalExpress.Infrastructure.Models;
 [Table("employees")]
 [Index(nameof(FirstName), nameof(LastName))]
 [Index(nameof(Email), IsUnique = true)]
-[Index(nameof(SssNumber), IsUnique = true)]
-[Index(nameof(TinNumber), IsUnique = true)]
-[Index(nameof(PhilHealthNumber), IsUnique = true)]
-[Index(nameof(PagIbigNumber), IsUnique = true)]
 public class Employee : IdentityUser<Ulid>
 {
     [Column("department_id")] public Ulid DepartmentId { get; set; }
@@ -33,22 +29,6 @@ public class Employee : IdentityUser<Ulid>
     [Required(ErrorMessage = "Position is required")]
     public required string Position { get; set; }
 
-    [Column("sss_number")]
-    [StringLength(10, MinimumLength = 10, ErrorMessage = "SSS number must 10 digits")]
-    public string? SssNumber { get; set; }
-
-    [Column("tin_number")]
-    [StringLength(12, MinimumLength = 9, ErrorMessage = "TIN number must be between 9 and 12 digits")]
-    public string? TinNumber { get; set; }
-
-    [Column("philhealth_number")]
-    [StringLength(12, MinimumLength = 12, ErrorMessage = "PhilHealth number must be 12 digits")]
-    public string? PhilHealthNumber { get; set; }
-
-    [Column("pagibig_number")]
-    [StringLength(12, MinimumLength = 12, ErrorMessage = "Pag-IBIG number must be 12 digits")]
-    public string? PagIbigNumber { get; set; }
-
     [Column("refresh_token")] public string? RefreshToken { get; set; }
     [Column("refresh_token_expiry_time")] public DateTime? RefreshTokenExpiryTime { get; set; }
 
@@ -65,7 +45,6 @@ public class Employee : IdentityUser<Ulid>
     [ForeignKey("StoreId")] public Store? Store { get; set; }
 
     public ICollection<Attendance> Attendances { get; set; } = [];
-    public ICollection<Payroll> Payrolls { get; set; } = [];
     public ICollection<SalesLog>? SalesLogProcessed { get; set; } = [];
     public ICollection<PdndRequest> PdndRequests { get; set; } = [];
 }
