@@ -1,40 +1,29 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace PandesalExpress.Infrastructure.Abstractions;
 
-public class Mediator : IMediator
+public class Mediator(IServiceProvider serviceProvider) : IMediator
 {
-    private readonly IServiceProvider _serviceProvider;
-
-    public Mediator(IServiceProvider serviceProvider)
-    {
-        _serviceProvider = serviceProvider;
-    }
-
     public async Task<TResponse> Send<TResponse>(ICommand<TResponse> command, CancellationToken cancellationToken = default)
     {
-        var handlerType = typeof(ICommandHandler<,>).MakeGenericType(command.GetType(), typeof(TResponse));
-        var handler = _serviceProvider.GetRequiredService(handlerType);
-        
-        var method = handlerType.GetMethod("Handle") 
-            ?? throw new InvalidOperationException($"Handler for {command.GetType()} does not contain a Handle method");
+        Type handlerType = typeof(ICommandHandler<,>).MakeGenericType(command.GetType(), typeof(TResponse));
+        object handler = serviceProvider.GetRequiredService(handlerType);
 
-        var task = (Task<TResponse>)method.Invoke(handler, new object[] { command, cancellationToken })!;
+        MethodInfo method = handlerType.GetMethod("Handle") ?? throw new InvalidOperationException($"Handler for {command.GetType()} does not contain a Handle method");
+
+        var task = (Task<TResponse>)method.Invoke(handler, [command, cancellationToken])!;
         return await task;
     }
 
     public async Task<TResponse> Send<TResponse>(IQuery<TResponse> query, CancellationToken cancellationToken = default)
     {
-        var handlerType = typeof(IQueryHandler<,>).MakeGenericType(query.GetType(), typeof(TResponse));
-        var handler = _serviceProvider.GetRequiredService(handlerType);
+        Type handlerType = typeof(IQueryHandler<,>).MakeGenericType(query.GetType(), typeof(TResponse));
+        object handler = serviceProvider.GetRequiredService(handlerType);
 
-        var method = handlerType.GetMethod("Handle")
-            ?? throw new InvalidOperationException($"Handler for {query.GetType()} does not contain a Handle method");
+        MethodInfo method = handlerType.GetMethod("Handle") ?? throw new InvalidOperationException($"Handler for {query.GetType()} does not contain a Handle method");
 
-        var task = (Task<TResponse>)method.Invoke(handler, new object[] { query, cancellationToken })!;
+        var task = (Task<TResponse>)method.Invoke(handler, [query, cancellationToken])!;
         return await task;
     }
 }

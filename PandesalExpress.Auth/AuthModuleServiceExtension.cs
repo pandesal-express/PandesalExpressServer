@@ -4,6 +4,7 @@ using PandesalExpress.Auth.Features.FaceLogin;
 using PandesalExpress.Auth.Features.FaceRegister;
 using PandesalExpress.Auth.Features.Login;
 using PandesalExpress.Auth.Features.RefreshToken;
+using PandesalExpress.Auth.Features.Register;
 using PandesalExpress.Infrastructure.Abstractions;
 
 namespace PandesalExpress.Auth;
@@ -14,11 +15,13 @@ public static class AuthModuleServiceExtension
     {
         // TODO: Will remove the old standard auth in the future
         services.AddScoped<ICommandHandler<LoginCommand, AuthResponseDto>, LoginHandler>();
-        services.AddScoped<ICommandHandler<RefreshTokenCommand, AuthResponseDto>, RefreshTokenHandler>();
+        services.AddScoped<ICommandHandler<RegisterCommand, AuthResponseDto>, RegisterHandler>();
 
         // Main authentication through face recognition
         services.AddScoped<ICommandHandler<FaceLoginCommand, AuthResponseDto>, FaceLoginHandler>();
         services.AddScoped<ICommandHandler<FaceRegisterCommand, AuthResponseDto>, FaceRegisterHandler>();
+
+        services.AddScoped<ICommandHandler<RefreshTokenCommand, AuthResponseDto>, RefreshTokenHandler>();
 
         return services;
     }
