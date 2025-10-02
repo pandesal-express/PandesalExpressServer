@@ -28,11 +28,11 @@ public class AddStocksToStoreHandler(
                                 .ToList();
 
         Dictionary<Ulid, StoreInventory> existingStoreInventories = await context.StoreInventories
-                                                                                 .Where(si => si.StoreId == storeId && productIds.Contains(si.ProductId))
-                                                                                 .ToDictionaryAsync(si => si.ProductId, si => si, cancellationToken);
-
+                                .Where(si => si.StoreId == storeId && productIds.Contains(si.ProductId))
+                                .ToDictionaryAsync(si => si.ProductId, si => si, cancellationToken);
+        
         var inventoriesToAdd = new List<StoreInventory>();
-        DateTime now = DateTime.Now;
+        DateTime now = DateTime.UtcNow;
 
         foreach (DeliverStockItemDto item in request.RequestDto.DeliveredItems)
         {

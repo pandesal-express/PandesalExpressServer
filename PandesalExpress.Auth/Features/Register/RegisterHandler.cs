@@ -1,5 +1,4 @@
-﻿using System.Data;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using PandesalExpress.Auth.Dtos;
 using PandesalExpress.Infrastructure.Abstractions;
 using PandesalExpress.Infrastructure.Context;
@@ -39,7 +38,7 @@ public class RegisterHandler(
         if (!result.Succeeded)
         {
             var errorString = string.Join("\n", result.Errors.Select(e => e.Description));
-            throw new DataException($"User creation failed: {errorString}");
+            throw new ApplicationException($"User creation failed: {errorString}");
         }
 
         // --- Add user to a role based on department name ---

@@ -14,7 +14,7 @@ namespace PandesalExpress.Commissary.Controllers;
 public class CommissaryController : ControllerBase
 {
     [HttpPost("stores/{id}/add-stocks")]
-    [Authorize(Policy = "StocksAndInventoryOnly")]
+    [Authorize]
     [ProducesResponseType(typeof(AddStocksToStoreResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
