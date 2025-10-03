@@ -24,13 +24,13 @@ public class AddStocksToStoreHandler(
             throw new KeyNotFoundException($"Store with ID {request.StoreId} not found");
 
         var productIds = request.RequestDto.DeliveredItems
-                                .Select(item => Ulid.Parse(item.ProductId))
-                                .ToList();
+                            .Select(item => Ulid.Parse(item.ProductId))
+                            .ToList();
 
         Dictionary<Ulid, StoreInventory> existingStoreInventories = await context.StoreInventories
-                                .Where(si => si.StoreId == storeId && productIds.Contains(si.ProductId))
-                                .ToDictionaryAsync(si => si.ProductId, si => si, cancellationToken);
-        
+                            .Where(si => si.StoreId == storeId && productIds.Contains(si.ProductId))
+                            .ToDictionaryAsync(si => si.ProductId, si => si, cancellationToken);
+    
         var inventoriesToAdd = new List<StoreInventory>();
         DateTime now = DateTime.UtcNow;
 
