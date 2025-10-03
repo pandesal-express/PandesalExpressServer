@@ -29,6 +29,7 @@ public class AuthControllerTests
     {
         // Arrange
         var userId = Ulid.NewUlid().ToString();
+        DateTime timeLogged = DateTime.UtcNow;
         var expectedResponse = new AuthResponseDto
         {
             Token = "test-token",
@@ -54,7 +55,7 @@ public class AuthControllerTests
                      .ReturnsAsync(expectedResponse);
 
         // Act
-        IActionResult result = await _controller.FaceLogin(userId, _mediatorMock.Object);
+        IActionResult result = await _controller.FaceLogin(userId, timeLogged, _mediatorMock.Object);
 
         // Assert
         OkObjectResult okResult = Assert.IsType<OkObjectResult>(result);
@@ -74,11 +75,13 @@ public class AuthControllerTests
     {
         // Arrange
         var userId = Ulid.NewUlid().ToString();
+        DateTime timeLogged = DateTime.UtcNow;
+
         _mediatorMock.Setup(m => m.Send(It.IsAny<FaceLoginCommand>(), It.IsAny<CancellationToken>()))
                      .ThrowsAsync(new UnauthorizedAccessException());
 
         // Act
-        IActionResult result = await _controller.FaceLogin(userId, _mediatorMock.Object);
+        IActionResult result = await _controller.FaceLogin(userId, timeLogged, _mediatorMock.Object);
 
         // Assert
         Assert.IsType<UnauthorizedResult>(result);
@@ -89,11 +92,13 @@ public class AuthControllerTests
     {
         // Arrange
         var userId = Ulid.NewUlid().ToString();
+        DateTime timeLogged = DateTime.UtcNow;
+
         _mediatorMock.Setup(m => m.Send(It.IsAny<FaceLoginCommand>(), It.IsAny<CancellationToken>()))
                      .ThrowsAsync(new Exception("Database error"));
 
         // Act
-        IActionResult result = await _controller.FaceLogin(userId, _mediatorMock.Object);
+        IActionResult result = await _controller.FaceLogin(userId, timeLogged, _mediatorMock.Object);
 
         // Assert
         ObjectResult statusResult = Assert.IsType<ObjectResult>(result);

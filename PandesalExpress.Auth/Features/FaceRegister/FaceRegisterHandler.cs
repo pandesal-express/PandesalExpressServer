@@ -71,6 +71,18 @@ public class FaceRegisterHandler(
 
         await userManager.AddToRoleAsync(employee, employee.Position);
 
+        // Then insert new data to attendance
+        var attendance = new Attendance
+        {
+            Id = Ulid.NewUlid(),
+            EmployeeId = employee.Id,
+            Status = AttendanceStatus.Present,
+            CheckIn = command.Dto.TimeLogged.TimeOfDay // Get the TimeLogged from the command
+        };
+
+        await context.Attendances.AddAsync(attendance, cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
+
         logger.LogInformation("User registered successfully: {Email}", employee.Email);
 
         (string accessToken, DateTime expiration) = await tokenService.GenerateJwtTokenAsync(employee);

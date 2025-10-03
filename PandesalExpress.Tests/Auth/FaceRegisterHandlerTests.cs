@@ -20,6 +20,7 @@ public sealed class FaceRegisterHandlerTests : IDisposable
     private readonly Mock<ITokenService> _tokenServiceMock;
     private readonly Mock<UserManager<Employee>> _userManagerMock;
 
+    #pragma warning disable CS8625
     public FaceRegisterHandlerTests()
     {
         DbContextOptions<AppDbContext> options = new DbContextOptionsBuilder<AppDbContext>()
@@ -59,7 +60,8 @@ public sealed class FaceRegisterHandlerTests : IDisposable
             LastName = "Doe",
             Email = "john.doe@example.com",
             Position = "Developer",
-            DepartmentId = department.Id.ToString()
+            DepartmentId = department.Id.ToString(),
+            TimeLogged = DateTime.UtcNow
         };
 
         var command = new FaceRegisterCommand(registerDto);
@@ -78,7 +80,6 @@ public sealed class FaceRegisterHandlerTests : IDisposable
 
         // Act
         AuthResponseDto result = await _handler.Handle(command, CancellationToken.None);
-
 
         // Assert
         Assert.NotNull(result);
@@ -208,7 +209,8 @@ public sealed class FaceRegisterHandlerTests : IDisposable
             LastName = "Doe",
             Email = "john.doe@example.com",
             Position = position,
-            DepartmentId = department.Id.ToString()
+            DepartmentId = department.Id.ToString(),
+            TimeLogged = DateTime.UtcNow
         };
 
         var command = new FaceRegisterCommand(registerDto);
@@ -237,5 +239,53 @@ public sealed class FaceRegisterHandlerTests : IDisposable
         _roleManagerMock.Verify(x => x.CreateAsync(It.Is<AppRole>(r => r.Name == position)), Times.Once);
         _userManagerMock.Verify(x => x.AddToRoleAsync(It.IsAny<Employee>(), departmentName), Times.Once);
         _userManagerMock.Verify(x => x.AddToRoleAsync(It.IsAny<Employee>(), position), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_Attendance_HasBeenAdded()
+    {
+        // Arrange
+        var department = new Department
+        {
+            Id = Ulid.NewUlid(),
+            Name = "Stocks and Inventory"
+        };
+        await _context.Departments.AddAsync(department);
+        await _context.SaveChangesAsync();
+
+        DateTime timeLogged = DateTime.Now;
+        var registerDto = new RegisterRequestDto
+        {
+            FirstName = "John",
+            LastName = "Doe",
+            Email = "john.doe@example.com",
+            Position = "Commissary",
+            DepartmentId = department.Id.ToString(),
+            TimeLogged = timeLogged
+        };
+
+        var command = new FaceRegisterCommand(registerDto);
+
+        _userManagerMock.Setup(x => x.FindByEmailAsync(registerDto.Email)).ReturnsAsync((Employee?)null);
+        _userManagerMock.Setup(x => x.CreateAsync(It.IsAny<Employee>())).ReturnsAsync(IdentityResult.Success);
+        _userManagerMock.Setup(x => x.UpdateAsync(It.IsAny<Employee>())).ReturnsAsync(IdentityResult.Success);
+        _userManagerMock.Setup(x => x.AddToRoleAsync(It.IsAny<Employee>(), It.IsAny<string>())).ReturnsAsync(IdentityResult.Success);
+
+        _roleManagerMock.Setup(x => x.RoleExistsAsync(It.IsAny<string>())).ReturnsAsync(false);
+        _roleManagerMock.Setup(x => x.CreateAsync(It.IsAny<AppRole>())).ReturnsAsync(IdentityResult.Success);
+
+        _tokenServiceMock.Setup(x => x.GenerateJwtTokenAsync(It.IsAny<Employee>()))
+                         .ReturnsAsync(("test-token", DateTime.UtcNow.AddHours(1)));
+        _tokenServiceMock.Setup(x => x.GenerateRefreshToken()).Returns("test-refresh-token");
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        Attendance? attendance = await _context.Attendances.FirstOrDefaultAsync();
+
+        Assert.NotNull(attendance);
+        Assert.Equal(AttendanceStatus.Present, attendance.Status);
+        Assert.Equal(timeLogged.TimeOfDay, attendance.CheckIn);
     }
 }

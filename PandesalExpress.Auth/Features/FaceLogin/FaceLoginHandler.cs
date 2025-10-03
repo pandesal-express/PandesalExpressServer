@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PandesalExpress.Auth.Dtos;
 using PandesalExpress.Infrastructure.Abstractions;
+using PandesalExpress.Infrastructure.Context;
 using PandesalExpress.Infrastructure.Models;
 using PandesalExpress.Infrastructure.Services;
 using Shared.Dtos;
@@ -10,6 +11,7 @@ using Shared.Dtos;
 namespace PandesalExpress.Auth.Features.FaceLogin;
 
 public class FaceLoginHandler(
+    AppDbContext context,
     UserManager<Employee> userManager,
     ITokenService tokenService,
     ILogger<FaceLoginHandler> logger
@@ -32,7 +34,18 @@ public class FaceLoginHandler(
 
         employee.RefreshToken = refreshToken;
         employee.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(3);
+
+        var attendance = new Attendance
+        {
+            Id = Ulid.NewUlid(),
+            EmployeeId = employee.Id,
+            Status = AttendanceStatus.Present,
+            CheckIn = command.TimeLogged.TimeOfDay
+        };
+
         await userManager.UpdateAsync(employee);
+        await context.Attendances.AddAsync(attendance, cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("Face login successful for user: {Email}", employee.Email);
 

@@ -188,11 +188,15 @@ public class AuthController(ILogger<AuthController> logger) : ControllerBase
     [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> FaceLogin([FromBody] string userId, [FromServices] IMediator mediator)
+    public async Task<IActionResult> FaceLogin(
+        [FromBody] string userId,
+        [FromQuery] DateTime timeLogged,
+        [FromServices] IMediator mediator
+    )
     {
         try
         {
-            var command = new FaceLoginCommand(Ulid.Parse(userId));
+            var command = new FaceLoginCommand(Ulid.Parse(userId), timeLogged);
 
             AuthResponseDto result = await mediator.Send(command, HttpContext.RequestAborted);
             return Ok(result);

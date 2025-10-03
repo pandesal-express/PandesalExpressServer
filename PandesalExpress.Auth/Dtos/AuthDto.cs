@@ -23,6 +23,7 @@ public record RegisterRequestDto
     [MinLength(8)] public string? Password { get; init; }
     [Compare(nameof(Password))] public string? ConfirmPassword { get; init; }
 
+    public DateTime TimeLogged { get; init; }
     public string? StoreId { get; init; }
 }
 
