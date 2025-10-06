@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -35,7 +36,7 @@ public class AuthControllerTests
             Token = "test-token",
             RefreshToken = "test-refresh-token",
             Expiration = DateTime.UtcNow.AddHours(1),
-            RefreshTokenExpiration = DateTime.UtcNow.AddDays(3).ToString("O"),
+            RefreshTokenExpiration = DateTime.UtcNow.AddDays(3),
             User = new EmployeeDto
             {
                 Id = userId,
@@ -51,11 +52,20 @@ public class AuthControllerTests
             }
         };
 
+        // Add the user_id claim to the controller's HttpContext
+        _controller.HttpContext.User = new ClaimsPrincipal(
+            new ClaimsIdentity(
+                [
+                    new Claim("user_id", userId)
+                ]
+            )
+        );
+
         _mediatorMock.Setup(m => m.Send(It.IsAny<FaceLoginCommand>(), It.IsAny<CancellationToken>()))
                      .ReturnsAsync(expectedResponse);
 
         // Act
-        IActionResult result = await _controller.FaceLogin(userId, timeLogged, _mediatorMock.Object);
+        IActionResult result = await _controller.FaceLogin(timeLogged, _mediatorMock.Object);
 
         // Assert
         OkObjectResult okResult = Assert.IsType<OkObjectResult>(result);
@@ -74,35 +84,16 @@ public class AuthControllerTests
     public async Task FaceLogin_UnauthorizedAccess_ReturnsUnauthorized()
     {
         // Arrange
-        var userId = Ulid.NewUlid().ToString();
         DateTime timeLogged = DateTime.UtcNow;
 
         _mediatorMock.Setup(m => m.Send(It.IsAny<FaceLoginCommand>(), It.IsAny<CancellationToken>()))
                      .ThrowsAsync(new UnauthorizedAccessException());
 
         // Act
-        IActionResult result = await _controller.FaceLogin(userId, timeLogged, _mediatorMock.Object);
+        IActionResult result = await _controller.FaceLogin(timeLogged, _mediatorMock.Object);
 
         // Assert
         Assert.IsType<UnauthorizedResult>(result);
-    }
-
-    [Fact]
-    public async Task FaceLogin_Exception_ReturnsInternalServerError()
-    {
-        // Arrange
-        var userId = Ulid.NewUlid().ToString();
-        DateTime timeLogged = DateTime.UtcNow;
-
-        _mediatorMock.Setup(m => m.Send(It.IsAny<FaceLoginCommand>(), It.IsAny<CancellationToken>()))
-                     .ThrowsAsync(new Exception("Database error"));
-
-        // Act
-        IActionResult result = await _controller.FaceLogin(userId, timeLogged, _mediatorMock.Object);
-
-        // Assert
-        ObjectResult statusResult = Assert.IsType<ObjectResult>(result);
-        Assert.Equal(500, statusResult.StatusCode);
     }
 
     [Fact]
@@ -123,7 +114,7 @@ public class AuthControllerTests
             Token = "test-token",
             RefreshToken = "test-refresh-token",
             Expiration = DateTime.UtcNow.AddHours(1),
-            RefreshTokenExpiration = DateTime.UtcNow.AddDays(3).ToString("O"),
+            RefreshTokenExpiration = DateTime.UtcNow.AddDays(3),
             User = new EmployeeDto
             {
                 Id = Ulid.NewUlid().ToString(),
@@ -146,8 +137,9 @@ public class AuthControllerTests
         IActionResult result = await _controller.FaceRegister(registerDto, _mediatorMock.Object);
 
         // Assert
-        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result);
-        AuthResponseDto response = Assert.IsType<AuthResponseDto>(okResult.Value);
+        ObjectResult objectResult = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(StatusCodes.Status201Created, objectResult.StatusCode);
+        AuthResponseDto response = Assert.IsType<AuthResponseDto>(objectResult.Value);
 
         Assert.NotNull(response.Token);
         Assert.NotNull(response.RefreshToken);

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using PandesalExpress.Auth;
@@ -27,7 +28,7 @@ using PandesalExpress.Stores;
 using PandesalExpress.Transfers;
 using Shared.Events;
 using StackExchange.Redis;
-using AssemblyReference = PandesalExpress.Stores.AssemblyReference; // I let the ide do this but I hate it
+using AssemblyReference = PandesalExpress.Stores.AssemblyReference;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -49,8 +50,7 @@ builder.Services.AddIdentity<Employee, AppRole>(options =>
        .AddEntityFrameworkStores<AppDbContext>()
        .AddDefaultTokenProviders();
 
-IConfigurationSection jwtSettings = builder.Configuration.GetSection("JwtSettings");
-string secretKey = jwtSettings["SecretKey"]!;
+builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("JwtSettings"));
 
 builder.Services.AddAuthentication(options =>
     {
@@ -58,8 +58,12 @@ builder.Services.AddAuthentication(options =>
         options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
         options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
     }
-).AddJwtBearer(options =>
+).AddJwtBearer( // keep this scheme for testing API endpoints
+    JwtBearerDefaults.AuthenticationScheme,
+    options =>
     {
+        JwtOptions jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtOptions>()!;
+
         options.SaveToken = true;
         options.RequireHttpsMetadata = builder.Environment.IsProduction();
         options.TokenValidationParameters = new TokenValidationParameters
@@ -67,9 +71,9 @@ builder.Services.AddAuthentication(options =>
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSettings["Issuer"],
-            ValidAudience = jwtSettings["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+            ValidIssuer = jwtSettings.Issuer,
+            ValidAudience = jwtSettings.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
             ClockSkew = TimeSpan.Zero
         };
 
@@ -111,6 +115,77 @@ builder.Services.AddAuthentication(options =>
                 );
 
                 return context.Response.WriteAsync(result);
+            }
+        };
+    }
+).AddJwtBearer(
+    "FaceAuthScheme",
+    options =>
+    {
+        JwtOptions jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtOptions>()!;
+
+        options.SaveToken = false;
+        options.RequireHttpsMetadata = builder.Environment.IsProduction();
+
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSettings.FaceIssuer,
+            ValidAudience = jwtSettings.FaceAudience,
+            RequireSignedTokens = true,
+            ClockSkew = TimeSpan.FromSeconds(30)
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                if (context.Request.Cookies.TryGetValue("jwt_token", out string? token))
+                    context.Token = token;
+                if (context.Request.Headers.TryGetValue("Authorization", out StringValues authHeader))
+                    context.Token = authHeader.ToString()["Bearer ".Length..].Trim();
+
+                return Task.CompletedTask;
+            },
+            OnTokenValidated = context =>
+            {
+                FacePublicKeyService keyProvider = context.HttpContext.RequestServices.GetRequiredService<FacePublicKeyService>();
+                TokenValidationParameters validationParams = context.Options.TokenValidationParameters;
+
+                validationParams.IssuerSigningKeyResolver = (token, securityToken, kid, parameters) =>
+                {
+                    IEnumerable<SecurityKey> keys = keyProvider.GetSigningKeysAsync().GetAwaiter().GetResult();
+                    return keys;
+                };
+
+                return Task.CompletedTask;
+            },
+            OnChallenge = async context =>
+            {
+                context.HandleResponse();
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                await context.Response.WriteAsJsonAsync(
+                    new
+                    {
+                        status = 401,
+                        message = "Invalid or missing Face auth token"
+                    }
+                );
+            },
+            OnAuthenticationFailed = async context =>
+            {
+                context.NoResult();
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsJsonAsync(
+                    new
+                    {
+                        status = 401,
+                        message = "Invalid or expired token."
+                    }
+                );
             }
         };
     }
@@ -178,14 +253,13 @@ builder.Services.AddScoped<IShiftService, ShiftService>();
 builder.Services.AddSingleton<IEventBus, InMemoryEventBus>();
 builder.Services.AddTransient<INotificationService, NotificationService>();
 builder.Services.AddMediator();
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient<FacePublicKeyService>();
 
 // Event Handlers
 builder.Services.AddScoped<IEventHandler<PdndRequestEvent>, PdndRequestEventHandler>();
 builder.Services.AddScoped<IEventHandler<TransferRequestCreatedEvent>, TransferRequestEventHandler>();
 builder.Services.AddScoped<IEventHandler<TransferRequestStatusUpdatedEvent>, TransferRequestEventHandler>();
-
-// Configurations
-builder.Services.Configure<KeysOptions>(builder.Configuration.GetSection("Keys")); // TODO: This is temporary in simulating server-to-server communication
 
 // Controllers from all assemblies
 builder.Services.AddControllers()

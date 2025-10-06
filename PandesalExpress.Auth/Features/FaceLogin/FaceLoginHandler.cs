@@ -19,7 +19,9 @@ public class FaceLoginHandler(
 {
     public async Task<AuthResponseDto> Handle(FaceLoginCommand command, CancellationToken cancellationToken)
     {
-        Employee? employee = await userManager.Users.FirstOrDefaultAsync(u => u.Id == command.UserId, cancellationToken);
+        Employee? employee = await userManager.Users
+                                              .Include(e => e.Department)
+                                              .FirstOrDefaultAsync(u => u.Id == command.UserId, cancellationToken);
 
         if (employee == null)
         {
@@ -27,13 +29,29 @@ public class FaceLoginHandler(
             throw new UnauthorizedAccessException("User not found.");
         }
 
-        logger.LogInformation("Generating tokens for user: {Email}", employee.Email);
+        if (employee is { LockoutEnabled: true, LockoutEnd: not null } && employee.LockoutEnd.Value > DateTime.UtcNow)
+        {
+            logger.LogWarning("Face login failed for user: {Email}. Account is locked.", employee.Email);
+            throw new UnauthorizedAccessException("Account is locked. Please contact support for assistance.");
+        }
+
+        logger.LogInformation("Face login: Generating tokens for user: {Email}", employee.Email);
 
         (string accessToken, DateTime expiration) = await tokenService.GenerateJwtTokenAsync(employee);
         string refreshToken = tokenService.GenerateRefreshToken();
 
         employee.RefreshToken = refreshToken;
         employee.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(3);
+
+        // check for recent attendance record
+        Attendance? recentAttendance = await context.Attendances
+                                                    .Where(a => a.EmployeeId == employee.Id)
+                                                    .Where(a => a.CheckIn.HasValue)
+                                                    .OrderByDescending(a => a.CreatedAt)
+                                                    .FirstOrDefaultAsync(cancellationToken);
+
+        if (recentAttendance != null)
+            throw new UnauthorizedAccessException("User already logged in for the shift.");
 
         var attendance = new Attendance
         {
@@ -54,7 +72,7 @@ public class FaceLoginHandler(
             Token = accessToken,
             RefreshToken = refreshToken,
             Expiration = expiration,
-            RefreshTokenExpiration = employee.RefreshTokenExpiryTime?.ToString("O"),
+            RefreshTokenExpiration = employee.RefreshTokenExpiryTime,
             User = new EmployeeDto
             {
                 Id = employee.Id.ToString(),

@@ -6,8 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using PandesalExpress.Auth.Attributes;
 using PandesalExpress.Auth.Dtos;
+using PandesalExpress.Auth.Exceptions;
 using PandesalExpress.Auth.Features.FaceLogin;
 using PandesalExpress.Auth.Features.FaceRegister;
 using PandesalExpress.Auth.Features.Login;
@@ -182,23 +182,62 @@ public class AuthController(ILogger<AuthController> logger) : ControllerBase
         return Ok(new { message = "Logged out successfully." });
     }
 
-    [AllowAnonymous]
-    [RequireApiKey] // TODO: for simulating in passing api key from server-to-server, will remove in prod
+    [Authorize(AuthenticationSchemes = "FaceAuthScheme")]
     [HttpPost("face-login")]
     [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> FaceLogin(
-        [FromBody] string userId,
-        [FromQuery] DateTime timeLogged,
+        [FromBody] DateTime timeLogged,
         [FromServices] IMediator mediator
     )
     {
         try
         {
-            var command = new FaceLoginCommand(Ulid.Parse(userId), timeLogged);
+            string? userIdClaim = User.FindFirst("user_id")?.Value;
 
+            if (string.IsNullOrWhiteSpace(userIdClaim))
+            {
+                logger.LogWarning("JWT missing user_id claim.");
+                throw new UnauthorizedAccessException("User ID not found in claims");
+            }
+
+            if (!Ulid.TryParse(userIdClaim, out Ulid userUlid))
+            {
+                logger.LogWarning("Invalid user id format in token: {UserId}", userIdClaim);
+                throw new UnauthorizedAccessException("Invalid user ID format");
+            }
+
+            var command = new FaceLoginCommand(userUlid, timeLogged);
             AuthResponseDto result = await mediator.Send(command, HttpContext.RequestAborted);
+
+            Response.Cookies.Append(
+                "jwt_token",
+                result.Token,
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Lax,
+                    Expires = result.Expiration,
+                    Path = "/"
+                }
+            );
+
+            Response.Cookies.Append(
+                "refresh_token",
+                result.RefreshToken!,
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Lax,
+                    Expires = result.RefreshTokenExpiration,
+                    Path = "/api/Auth/refresh-token"
+                }
+            );
+
             return Ok(result);
         }
         catch (UnauthorizedAccessException) { return Unauthorized(); }
@@ -209,11 +248,11 @@ public class AuthController(ILogger<AuthController> logger) : ControllerBase
         }
     }
 
-    [AllowAnonymous]
-    [RequireApiKey] // TODO: for simulating in passing api key from server-to-server, will remove in prod
+    [Authorize(AuthenticationSchemes = "FaceAuthScheme")]
     [HttpPost("face-register")]
     [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> FaceRegister(
         [FromBody] RegisterRequestDto registerDto,
@@ -225,12 +264,39 @@ public class AuthController(ILogger<AuthController> logger) : ControllerBase
             var command = new FaceRegisterCommand(registerDto);
             AuthResponseDto result = await mediator.Send(command, HttpContext.RequestAborted);
 
-            return Ok(result);
+            Response.Cookies.Append(
+                "jwt_token",
+                result.Token,
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Lax,
+                    Expires = result.Expiration,
+                    Path = "/"
+                }
+            );
+
+            Response.Cookies.Append(
+                "refresh_token",
+                result.RefreshToken!,
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Lax,
+                    Expires = result.RefreshTokenExpiration,
+                    Path = "/api/Auth/refresh-token"
+                }
+            );
+
+            return StatusCode(StatusCodes.Status201Created, result);
         }
         catch (UnauthorizedAccessException) { return Unauthorized(); }
+        catch (DuplicateEmailException ex) { return Conflict(new { message = ex.Message }); }
         catch (Exception ex)
         {
-            logger.LogError(ex, "An unexpected error occurred during registration");
+            logger.LogError(ex, "Registration error: {Message}", ex.Message);
             return StatusCode(500, new { message = "An internal server error occurred." });
         }
     }

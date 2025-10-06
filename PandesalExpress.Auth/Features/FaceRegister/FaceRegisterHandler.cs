@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PandesalExpress.Auth.Dtos;
+using PandesalExpress.Auth.Exceptions;
 using PandesalExpress.Infrastructure.Abstractions;
 using PandesalExpress.Infrastructure.Context;
 using PandesalExpress.Infrastructure.Models;
@@ -23,7 +24,7 @@ public class FaceRegisterHandler(
     {
         Employee? existingUser = await userManager.FindByEmailAsync(command.Dto.Email);
         if (existingUser != null)
-            throw new InvalidOperationException("An account with this email already exists.");
+            throw new DuplicateEmailException("An account with this email already exists.");
 
         var departmentUlid = Ulid.Parse(command.Dto.DepartmentId);
 
@@ -50,7 +51,8 @@ public class FaceRegisterHandler(
             LastName = command.Dto.LastName,
             Position = command.Dto.Position,
             DepartmentId = department.Id,
-            Department = department
+            Department = department,
+            EmailConfirmed = true
         };
 
         IdentityResult result = await userManager.CreateAsync(employee);
@@ -99,7 +101,7 @@ public class FaceRegisterHandler(
             Token = accessToken,
             RefreshToken = refreshToken,
             Expiration = expiration,
-            RefreshTokenExpiration = employee.RefreshTokenExpiryTime?.ToString("O"),
+            RefreshTokenExpiration = employee.RefreshTokenExpiryTime,
             User = new EmployeeDto
             {
                 Id = employee.Id.ToString(),

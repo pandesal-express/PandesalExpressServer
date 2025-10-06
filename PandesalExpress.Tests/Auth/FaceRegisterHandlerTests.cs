@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
 using PandesalExpress.Auth.Dtos;
+using PandesalExpress.Auth.Exceptions;
 using PandesalExpress.Auth.Features.FaceRegister;
 using PandesalExpress.Infrastructure.Context;
 using PandesalExpress.Infrastructure.Models;
@@ -93,7 +94,7 @@ public sealed class FaceRegisterHandlerTests : IDisposable
     }
 
     [Fact]
-    public async Task Handle_ExistingUser_ThrowsInvalidOperationException()
+    public async Task Handle_ExistingUser_ThrowsDuplicateEmailException()
     {
         // Arrange
         var department = new Department
@@ -125,7 +126,7 @@ public sealed class FaceRegisterHandlerTests : IDisposable
         _userManagerMock.Setup(x => x.FindByEmailAsync(registerDto.Email)).ReturnsAsync(existingEmployee);
 
         // Act & Assert
-        InvalidOperationException exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _handler.Handle(command, CancellationToken.None));
+        DuplicateEmailException exception = await Assert.ThrowsAsync<DuplicateEmailException>(() => _handler.Handle(command, CancellationToken.None));
         Assert.Equal("An account with this email already exists.", exception.Message);
     }
 
