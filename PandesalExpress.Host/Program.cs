@@ -193,12 +193,26 @@ builder.Services.AddAuthentication(options =>
     CookieAuthenticationDefaults.AuthenticationScheme,
     options =>
     {
-        options.LoginPath = "/Auth/login";
-        options.LogoutPath = "/Auth/logout";
+        options.LoginPath = "/auth/login";
+        options.LogoutPath = "/auth/logout";
         options.SlidingExpiration = true;
         options.ExpireTimeSpan = TimeSpan.FromHours(24);
 
         // don't use this scheme for API endpoints
+        options.ForwardDefaultSelector = ctx =>
+            ctx.Request.Path.StartsWithSegments("/api")
+                ? JwtBearerDefaults.AuthenticationScheme
+                : CookieAuthenticationDefaults.AuthenticationScheme;
+    }
+).AddCookie(
+    "FaceAuthCookie",
+    options =>
+    {
+        options.LoginPath = "/auth/face-login";
+        options.LogoutPath = "/auth/logout";
+        options.SlidingExpiration = true;
+        options.ExpireTimeSpan = TimeSpan.FromHours(24);
+
         options.ForwardDefaultSelector = ctx =>
             ctx.Request.Path.StartsWithSegments("/api")
                 ? JwtBearerDefaults.AuthenticationScheme
@@ -255,6 +269,7 @@ builder.Services.AddTransient<INotificationService, NotificationService>();
 builder.Services.AddMediator();
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient<FacePublicKeyService>();
+builder.Services.AddHostedService<JwksRefreshService>();
 
 // Event Handlers
 builder.Services.AddScoped<IEventHandler<PdndRequestEvent>, PdndRequestEventHandler>();

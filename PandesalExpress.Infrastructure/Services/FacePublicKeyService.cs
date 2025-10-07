@@ -68,7 +68,7 @@ public class FacePublicKeyService
 
             JwksDocument? jwks = await response.Content.ReadFromJsonAsync<JwksDocument>();
 
-            if (jwks?.Keys == null || jwks.Keys.Count > 0)
+            if (jwks?.Keys is not { Count: > 0 })
             {
                 _logger.LogError("JWKS document is empty or invalid");
                 throw new InvalidOperationException("JWKS document is empty or invalid");
