@@ -22,17 +22,17 @@ public class DepartmentController(AppDbContext context, ICacheService cacheServi
                                                                                         )
                                                                                         .OrderBy(d => d.Name)
                                                                                         .ToListAsync();
-    
+
     [AllowAnonymous]
-    [HttpGet("selections")]
+    [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<DepartmentDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<DepartmentDto>>> GetDepartmentSelections()
+    public async Task<ActionResult<IEnumerable<DepartmentDto>>> GetDepartments()
     {
-        const string cacheKey = "departments:selections";
-        
+        const string cacheKey = "departments:all";
+
         List<DepartmentDto>? departments = await cacheService.GetOrSetAsync(
-            cacheKey, 
-            _departmentsFactory, 
+            cacheKey,
+            _departmentsFactory,
             TimeSpan.FromHours(24)
         );
 
