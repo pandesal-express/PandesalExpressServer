@@ -6,15 +6,18 @@ using Microsoft.Extensions.Logging;
 using PandesalExpress.Infrastructure.Abstractions;
 using PandesalExpress.Infrastructure.Context;
 using PandesalExpress.Infrastructure.Models;
+using PandesalExpress.Infrastructure.Services;
 using Shared.Dtos;
 
 namespace PandesalExpress.Commissary.Features.AddStocksToStore;
 
 public class AddStocksToStoreHandler(
     AppDbContext context,
-    ILogger<AddStocksToStoreHandler> logger
+    ILogger<AddStocksToStoreHandler> logger,
+    ICacheService cacheService
 ) : ICommandHandler<AddStocksToStoreCommand, AddStocksToStoreResponseDto>
 {
+    private readonly ICacheService _cacheService = cacheService;
     public async Task<AddStocksToStoreResponseDto> Handle(AddStocksToStoreCommand request, CancellationToken cancellationToken)
     {
         var storeId = Ulid.Parse(request.StoreId);
@@ -57,6 +60,11 @@ public class AddStocksToStoreHandler(
                 };
 
                 inventoriesToAdd.Add(newInventoryItem);
+                
+                string cacheKey = newInventoryItem.Id.ToString();
+                TimeSpan expiration = TimeSpan.FromMinutes(60);
+                await _cacheService.SetAsync(cacheKey, $"Store:{newInventoryItem.StoreId} status:pending", expiration); // <-- Use the injected field/parameter
+
             }
         }
 
